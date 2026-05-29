@@ -7,6 +7,7 @@ export { SplashScreen } from "./screens/SplashScreen";
 export { useAuthStore } from "./store/authStore";
 export type {
   AuthResponse,
+  AuthUser,
   LoginRequest,
   RegisterRequest,
   UserProfile,

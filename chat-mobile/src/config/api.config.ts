@@ -1,4 +1,4 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { AxiosError, create, type InternalAxiosRequestConfig } from "axios";
 
 import { APP_CONFIG } from "@/config/app.config";
 import { ENV } from "@/config/env.config";
@@ -11,18 +11,8 @@ type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
 };
 
-const baseURL = ENV.API_URL;
-
-export const authHttpClient = axios.create({
-  baseURL,
-  timeout: APP_CONFIG.apiTimeoutMs,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-export const apiClient = axios.create({
-  baseURL,
+export const apiClient = create({
+  baseURL: `${ENV.API_URL}/api`,
   timeout: APP_CONFIG.apiTimeoutMs,
   headers: {
     "Content-Type": "application/json",

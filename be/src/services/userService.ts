@@ -51,3 +51,19 @@ export const searchUsers = async (query: string): Promise<PublicUser[]> => {
 
   return users.map(toPublicUser);
 };
+
+export const listUsers = async (
+  currentUserId: string,
+  page = 1,
+  limit = 20,
+): Promise<PublicUser[]> => {
+  const skip = Math.max(0, page - 1) * limit;
+
+  const users = await UserModel.find({ _id: { $ne: currentUserId } })
+    .limit(limit)
+    .skip(skip)
+    .sort({ username: 1 })
+    .lean();
+
+  return users.map(toPublicUser);
+};

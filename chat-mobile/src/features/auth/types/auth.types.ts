@@ -1,8 +1,11 @@
-export type UserProfile = {
+export type AuthUser = {
   id: string;
   username: string;
-  email: string;
+  email?: string | null;
   avatar?: string;
+  roles?: string[];
+  iat?: number;
+  exp?: number;
 };
 
 export type LoginRequest = {
@@ -17,7 +20,10 @@ export type RegisterRequest = {
 };
 
 export type AuthResponse = {
-  user: UserProfile;
-  accessToken: string;
-  refreshToken: string;
+  user: AuthUser;
+  accessToken?: string;
+  refreshToken?: string;
 };
+
+// Giữ alias tương thích để các file cũ chưa đổi tên vẫn hoạt động.
+export type UserProfile = AuthUser;

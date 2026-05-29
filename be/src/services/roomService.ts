@@ -102,6 +102,26 @@ export const createRoom = async (
   const memberIds = Array.from(new Set([...input.memberIds, creatorId]));
   const members = await ensureUsersExist(memberIds);
 
+  // Nếu là private room, kiểm tra xem đã có phòng với cùng tập thành viên chưa.
+  // Nếu có, trả về phòng đó thay vì tạo mới.
+  if (input.type === "private") {
+    const existing = await RoomModel.findOne({
+      type: "private",
+      members: { $all: members },
+    })
+      .populate("members", "username email avatar")
+      .lean();
+
+    if (existing) {
+      // Nếu số lượng thành viên khớp (tránh trường hợp phòng private nhưng chứa thêm thành viên lạ)
+      if ((existing.members as any[]).length === members.length) {
+        return formatRoom(
+          existing as unknown as Parameters<typeof formatRoom>[0],
+        );
+      }
+    }
+  }
+
   const room = await RoomModel.create({
     name: input.name.trim(),
     type: input.type,

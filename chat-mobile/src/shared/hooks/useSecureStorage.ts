@@ -1,10 +1,11 @@
 import * as SecureStore from "expo-secure-store";
 import { useCallback } from "react";
 
-const isWeb = typeof window !== "undefined";
+const isWebStorageAvailable =
+  typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 
 async function canUseSecureStore(): Promise<boolean> {
-  if (isWeb) {
+  if (isWebStorageAvailable) {
     return false;
   }
 
@@ -16,7 +17,7 @@ async function readItem(key: string): Promise<string | null> {
     return SecureStore.getItemAsync(key);
   }
 
-  if (isWeb) {
+  if (isWebStorageAvailable) {
     return window.localStorage.getItem(key);
   }
 
@@ -29,7 +30,7 @@ async function writeItem(key: string, value: string): Promise<void> {
     return;
   }
 
-  if (isWeb) {
+  if (isWebStorageAvailable) {
     window.localStorage.setItem(key, value);
   }
 }
@@ -40,7 +41,7 @@ async function removeItem(key: string): Promise<void> {
     return;
   }
 
-  if (isWeb) {
+  if (isWebStorageAvailable) {
     window.localStorage.removeItem(key);
   }
 }

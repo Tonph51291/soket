@@ -5,7 +5,7 @@ import {
   logoutSession,
   refreshSession,
 } from "@/features/auth/services/auth.service";
-import type { UserProfile } from "@/features/auth/types/auth.types";
+import type { AuthUser } from "@/features/auth/types/auth.types";
 import { secureStorage } from "@/shared/hooks/useSecureStorage";
 
 const ACCESS_TOKEN_KEY = "access_token";
@@ -13,13 +13,13 @@ const REFRESH_TOKEN_KEY = "refresh_token";
 const USER_PROFILE_KEY = "user_profile";
 
 type AuthState = {
-  user: UserProfile | null;
+  user: AuthUser | null;
   accessToken: string | null;
   refreshToken: string | null;
   isLoggedIn: boolean;
   isInitialized: boolean;
   setAuth: (
-    user: UserProfile,
+    user: AuthUser,
     accessToken: string,
     refreshToken: string,
   ) => Promise<void>;
@@ -27,18 +27,28 @@ type AuthState = {
   initialize: () => Promise<void>;
 };
 
-function parseStoredUser(value: string | null): UserProfile | null {
+function parseStoredUser(value: string | null): AuthUser | null {
   if (!value) {
     return null;
   }
 
   try {
-    const parsed = JSON.parse(value) as UserProfile;
+    const parsed = JSON.parse(value) as AuthUser;
 
     if (
       typeof parsed.id === "string" &&
       typeof parsed.username === "string" &&
-      typeof parsed.email === "string"
+      (parsed.email === undefined ||
+        parsed.email === null ||
+        typeof parsed.email === "string") &&
+      (parsed.avatar === undefined ||
+        parsed.avatar === null ||
+        typeof parsed.avatar === "string") &&
+      (parsed.roles === undefined ||
+        (Array.isArray(parsed.roles) &&
+          parsed.roles.every((role) => typeof role === "string"))) &&
+      (parsed.iat === undefined || typeof parsed.iat === "number") &&
+      (parsed.exp === undefined || typeof parsed.exp === "number")
     ) {
       return parsed;
     }
@@ -49,8 +59,18 @@ function parseStoredUser(value: string | null): UserProfile | null {
   return null;
 }
 
+function hasRequiredTokens(payload: {
+  accessToken?: string;
+  refreshToken?: string;
+}): payload is { accessToken: string; refreshToken: string } {
+  return (
+    typeof payload.accessToken === "string" &&
+    typeof payload.refreshToken === "string"
+  );
+}
+
 async function persistAuth(
-  user: UserProfile,
+  user: AuthUser,
   accessToken: string,
   refreshToken: string,
 ) {
@@ -139,6 +159,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (storedRefreshToken) {
         try {
           const refreshed = await refreshSession(storedRefreshToken);
+
+          if (!hasRequiredTokens(refreshed)) {
+            throw new Error(
+              "Refresh response thiếu accessToken hoặc refreshToken",
+            );
+          }
 
           await persistAuth(
             refreshed.user,

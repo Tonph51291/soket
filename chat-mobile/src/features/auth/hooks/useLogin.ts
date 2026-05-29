@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 
 import { showToast } from "../../../shared/components/feedback/Toast";
-import { getAuthErrorMessage, loginSession } from "../services/auth.service";
+import { loginSession } from "../services/auth.service";
 import { useAuthStore } from "../store/authStore";
 import type { LoginRequest } from "../types/auth.types";
 
@@ -16,7 +16,8 @@ export function useLogin() {
       router.replace("/(tabs)");
     },
     onError: (error) => {
-      showToast(getAuthErrorMessage(error), "error");
+      console.log("Login error:", error);
+      showToast("Đăng nhập thất bại", "error");
     },
   });
 }
